@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Router</title>
+</head>
+
+<body>
+    <nav>
+        <a href="#" data-path="/">Home</a>
+        <a href="#" data-path="/about">About</a>
+        <a href="#" data-path="/contact">Contact</a>
+    </nav>
+    <div id="content"></div>
+
+    <!-- 基于hash -->
+    <!-- <script>
+        // 路由映射表
+        const routes = {
+            '/': () => document.getElementById('content').innerHTML = '<h1>Home Page</h1>',
+            '/about': () => document.getElementById('content').innerHTML = '<h1>About Page</h1>',
+            '/contact': () => document.getElementById('content').innerHTML = '<h1>Contact Page</h1>'
+        };
+
+        // 初始化路由
+        function initRouter() {
+            const hash = window.location.hash.slice(1) || '/';
+            const route = routes[hash];
+            if (route) {
+                route();
+            } else {
+                // 处理 404 情况
+                document.getElementById('content').innerHTML = '<h1>404 Not Found</h1>';
+            }
+        }
+
+        // 监听 hash 变化
+        window.addEventListener('hashchange', initRouter);
+
+        // 页面加载时初始化路由
+        window.addEventListener('load', initRouter);
+    </script> -->
+
+    <!-- 基于 history -->
+     <script>
+        const routes = {
+            '/': () => document.getElementById('content').innerHTML = 'root',
+            '/about': () => document.getElementById('content').innerHTML = 'about',
+            '/contact': () => document.getElementById('content').innerHTML = 'contact',
+        }
+
+        const initRouter = () => {
+            console.log(history)
+
+            const pathname = window.location.pathname;
+            if (!routes[pathname]) {
+                return document.getElementById('content').innerHTML = '404'
+            }
+
+            routes[pathname]();
+            
+        }
+
+        const nav = document.getElementsByTagName('nav')[0]
+
+        nav.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (e.target.dataset.path) {
+                window.history.pushState({}, "", e.target.dataset.path)
+            }
+            initRouter()
+        })
+
+        // 1. 浏览器前进或后退按钮操作 2. 调用 history.back()、history.forward() 或 history.go() 方法
+        window.addEventListener('popstate', initRouter)
+
+        window.addEventListener('load', initRouter)
+
+     </script>
+</body>
+
+</html>

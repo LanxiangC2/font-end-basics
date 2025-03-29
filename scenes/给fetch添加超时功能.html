@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    
+
+    <script>
+
+
+        // 给 fetch 添加超时功能
+
+        // 改原生函数，这样不好，影响范围太大了，不推荐
+        // window.fetch = function(url, options) {}
+        // 
+
+        function createFetchWithTimeout(timeout) {
+            return async function (url, options = {}) {
+                const controller = new AbortController();
+                const signal = controller.signal;
+
+                // 设置超时定时器
+                const timeoutId = setTimeout(() => {
+                    controller.abort(); // 超时后取消请求
+                    console.error('请求超时');
+                }, timeout);
+
+                try {
+                    // 发起带有信号的 fetch 请求
+                    const response = await fetch(url, { ...options, signal });
+                    // 请求成功，清除定时器
+                    clearTimeout(timeoutId);
+                    return response;
+                } catch (error) {
+                    // 清除定时器
+                    clearTimeout(timeoutId);
+                    if (error.name === 'AbortError') {
+                        // 处理超时错误
+                        throw new Error('请求超时');
+                    }
+                    // 处理其他错误
+                    throw error;
+                }
+            };
+        }
+
+        // 使用示例
+        const fetchWithTimeout = createFetchWithTimeout(6000);
+
+        fetchWithTimeout('http://localhost:3000/api/v1')
+            .then(response => {
+                    // 检查响应状态 
+                    console.log(response)
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('请求失败');
+                })
+            .then(data => console.log(data))
+            .catch(error => console.error(error));
+
+
+
+    </script>
+</body>
+</html>

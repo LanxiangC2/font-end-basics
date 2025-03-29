@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+
+    <div id="box" >
+        <input type="text" id="inputText">
+        <p id="viewText"></p>
+    </div>
+
+    <!-- defineProperty 的实现 -->
+    <!-- <script>
+
+        const data = {
+            name: 'lyric'
+        }
+
+        let inputText = document.getElementById('inputText')
+        let viewText = document.getElementById('viewText')
+
+        // 1. defineProperty 的实现
+        const observe = (raw) => {
+            Object.keys(raw).forEach(key => {
+                let val = raw[key]
+                Object.defineProperty(raw, key, {
+                    get: () => {
+                        return val
+                    },
+                    set: (newVal) => {
+                        val = newVal
+                        viewText.innerHTML = val
+                    }
+                })
+            })
+        }
+
+        inputText.addEventListener('input', (e) => {
+            data.name = e.target.value
+        })
+
+        observe(data)
+
+        // 初始化渲染
+        inputText.value = data.name
+        viewText.innerHTML = data.name
+
+    </script> -->
+
+    <!-- proxy 的实现 -->
+    <script>
+
+        const input = document.getElementById('inputText')
+        const display = document.getElementById('viewText')
+
+        const data = {
+            name: 'lyric'
+        }
+
+        const proxy = new Proxy(data, {
+            get(target, prop) {
+                return target[prop]
+            },
+            set(target, prop, val) {
+                target[prop] = val
+                display.innerHTML = val
+                return true
+            }
+        })
+
+        input.addEventListener('input', (e) => {
+            proxy.name = e.target.value
+        })
+
+        // 初始渲染
+        input.value = data.name
+        display.innerText = data.name
+    </script>
+</body>
+</html>

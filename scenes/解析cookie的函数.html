@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie 解析示例</title>
+</head>
+
+<body>
+    <h1>Cookie 解析</h1>
+    <button id="parseCookieBtn">解析 Cookie</button>
+    <pre id="cookieResult"></pre>
+
+    <script>
+        // 定义 Cookie 解析函数
+        function parseCookies() {   
+            
+            // 模拟设置 Cookie
+            const mockCookies = 'user=lyric; age=25; isLoggedIn=true; expires=Wed, 21 Oct 2023 07:28:00 GMT; path=/; domain=.example.com; secure; httponly'
+            // document.cookie = mockCookies;
+
+            const cookieStr = mockCookies;
+
+            const cookies = {};
+
+            if (cookieStr) {
+                // 将 Cookie 字符串按分号和空格分割成多个键值对
+                const cookiePairs = cookieStr.split('; ');
+
+                // 遍历每个键值对
+                for (let i = 0; i < cookiePairs.length; i++) {
+                    const pair = cookiePairs[i].split('=');
+                    const name = decodeURIComponent(pair[0]);
+                    const value = decodeURIComponent(pair[1]);
+                    // 将解析后的键值对添加到 cookies 对象中
+                    cookies[name] = value;
+
+                    console.log(name, value);
+                }
+            }
+
+            return cookies;
+        }
+
+        // 获取按钮和结果展示区域的 DOM 元素
+        const parseCookieBtn = document.getElementById('parseCookieBtn');
+        const cookieResult = document.getElementById('cookieResult');
+
+        // 为按钮添加点击事件监听器
+        parseCookieBtn.addEventListener('click', function () {
+            const parsedCookies = parseCookies();
+            // 将解析后的 Cookie 对象转换为 JSON 字符串并展示在页面上
+            cookieResult.textContent = JSON.stringify(parsedCookies, null, 2);
+        });
+    </script>
+</body>
+
+</html>

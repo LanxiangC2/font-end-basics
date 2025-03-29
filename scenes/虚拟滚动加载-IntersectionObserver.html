@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Scrolling with IntersectionObserver</title>
+    <style>
+        #scroll-container {
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+        .item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div id="scroll-container">
+        <!-- 数据项将通过 JavaScript 动态生成 -->
+    </div>
+
+    <script>
+        // 模拟数据
+        const allItems = Array.from({ length: 1000 }, (_, i) => `Item ${i + 1}`);
+        let visibleItems = [];
+        let observer = null;
+
+        // 初始化 IntersectionObserver
+        function initObserver() {
+            observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        loadMoreItems();
+                        observer.unobserve(entry.target);
+                    }
+                });
+            });
+        }
+
+        // 加载初始项
+        function loadInitialItems() {
+            const start = 0;
+            const end = Math.min(allItems.length, 20); // 初始加载20项
+            visibleItems = allItems.slice(start, end);
+            renderItems();
+            if (end < allItems.length) {
+                const lastItem = document.querySelector('.item:last-child');
+                if (lastItem) {
+                    observer.observe(lastItem);
+                }
+            }
+        }
+
+        // 加载更多项
+        function loadMoreItems() {
+            const start = visibleItems.length;
+            const end = Math.min(allItems.length, start + 20); // 每次加载20项
+            visibleItems = allItems.slice(0, end);
+            renderItems();
+            if (end < allItems.length) {
+                const lastItem = document.querySelector('.item:last-child');
+                if (lastItem) {
+                    observer.observe(lastItem);
+                }
+            }
+        }
+
+        // 渲染数据项
+        function renderItems() {
+            const scrollContainer = document.getElementById('scroll-container');
+            scrollContainer.innerHTML = ''; // 清空容器
+            visibleItems.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                itemElement.textContent = item;
+                scrollContainer.appendChild(itemElement);
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            initObserver();
+            loadInitialItems();
+        });
+    </script>
+</body>
+</html>

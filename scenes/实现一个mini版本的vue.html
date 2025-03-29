@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="id"></div>
+
+    <script>
+
+        // 依赖收集类
+
+        class Dep {
+            constructor() {
+                this.subscribers = new Set();
+            }
+
+            addSubscribe() {
+                if(Dep.target) {
+                    this.subscribers.add(Dep.target)
+                }
+            }
+
+            notify() {
+                this.subscribers.forEach(subscriber => subscriber())
+            }
+        }
+
+        Dep.target = null
+
+
+        function reactive (data) {
+
+            const targetMap = new WeakMap()
+
+            // 每个对象作为键，进行存储 deps -> deps 内部，对象的属性作为键
+
+            function getDep(target, prop) {
+
+                let targetDeps = targetMap.get(target)
+                if (!targetDeps) {
+                    targetDeps = new Map()
+                    targetMap.set(target, targetDeps)
+                }
+
+                let dep = targetDeps.get(prop)
+                if (!dep) {
+                    dep = new Dep()
+                    targetDeps.set(prop, dep)
+                }
+
+                return dep
+            }
+
+            return new Proxy(data, {
+                get(target, prop) {
+                    // 1.  在 reactive 函数的 get 和 set 拦截器中，
+                    // 你使用了 target.__dep__ 来存储每个对象的依赖信息。
+                    // 然而，这种做法会直接在原对象上添加一个 __dep__ 属性，
+                    // 可能会与对象原有的属性冲突，并且破坏了对象的原始结构。
+                    // 更好的做法是使用 WeakMap 来存储对象和其依赖的映射关系。
+
+                    // 2. 当对象的某个属性是另一个对象时，修改这个嵌套对象的属性不会触发依赖更新
+                    // const dep = getDep(target, prop)
+                    // dep.addSubscribe()
+                    // return Reflect.get(target, prop)
+
+                    // 更好的做法是: 
+                    const dep = getDep(target, prop)
+                    dep.addSubscribe()
+                    const value = Reflect.get(target, prop)
+                    if (typeof value === 'object' && value !== null) {
+                        return reactive(value) // 懒代理，访问的时候才处理嵌套对象
+                    }
+                    return value;
+                },
+
+                set(target, prop, newVal) {
+                    const dep = getDep(target, prop)
+                    Reflect.set(target, prop, newVal)
+                    dep.notify() // 通知更新
+                    return true
+                }
+            })
+
+        }
+
+        // 副作用函数
+        function effect (fn) {
+            const wrappedFn = () => {
+                Dep.target = wrappedFn;
+                fn();
+                Dep.target = null;
+            }
+            wrappedFn();
+            return wrappedFn;
+        }
+
+        /** 以下仅作了解 对数组的拦截，通常是通过改写拓展数组方法来实现 */
+        // 数组方法拦截
+        const arrayMethods = {};
+        const originalArrayMethods = Array.prototype;
+        const arrayMethodsToPatch = [
+            'push',
+            'pop',
+            'shift',
+            'unshift',
+            'splice',
+            'sort',
+            'reverse'
+        ];
+        arrayMethodsToPatch.forEach(method => {
+            const originalMethod = originalArrayMethods[method];
+            arrayMethods[method] = function (...args) {
+                const result = originalMethod.apply(this, args);
+                const dep = getDep(this, '__ob__');
+                dep.notify();
+                return result;
+            };
+        });
+
+        /** computed 方法实现 */
+        function computed(getter) {
+            let value;
+            let dirty = true;
+            const dep = new Dep();
+
+            const effect = () => {
+                if (dirty) {
+                    Dep.target = effect;
+                    value = getter();
+                    Dep.target = null;
+                    dirty = false;
+                }
+                return value;
+            };
+
+            // 副作用函数，用于监听依赖变化
+            const scheduler = () => {
+                dirty = true;
+                dep.notify();
+            };
+
+            const runner = () => {
+                Dep.target = scheduler;
+                getter();
+                Dep.target = null;
+            };
+
+            // 执行一次 runner 进行依赖收集
+            runner();
+
+            return {
+                get value() {
+                    dep.addSubscribe();
+                    const result = effect();
+                    return result;
+                }
+            };
+        }
+
+
+
+    </script>
+
+    <script>
+
+        const data = reactive({
+            name: 'lyirc',
+            age: 20
+        })
+        const string = computed(() => `computed: ${data.name}${data.age}`)
+
+        effect(() => {
+            console.log('my name is', data.name, data.age)
+        })
+
+        console.log(string.value)
+        setTimeout(() => {
+            data.name = 'tsouling',
+            data.age = 100
+            console.log(string.value)
+        }, 3000)
+        
+
+        
+    </script>
+</body>
+</html>

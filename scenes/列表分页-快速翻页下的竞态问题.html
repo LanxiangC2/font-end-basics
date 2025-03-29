@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>分页列表</title>
+</head>
+<body>
+    <div id="container">
+        <table id="list">
+            <thead>
+                <tr>
+                    <th>编号</th>
+                    <th>姓名</th>
+                    <th>操作</th>
+                </tr>
+           </thead>
+            <tbody id="data">
+                <!-- 这里将会有动态生成的内容 -->
+            </tbody>
+            <tfoot>
+                <tr class="pagenum">
+                    <td colspan="3">
+                        <div class="pagination">
+                            <button onclick="previousPage()">上一页</button>
+                            <span id="current_page">1</span>
+                            <button onclick="nextPage()">下一页</button>
+                        </div>
+                    </td>
+                </tr>
+            </tfooter>
+        </table>
+    </div>
+
+    <script>
+        // 首次加载时，显示第一页
+        window.onload = function() {
+            loadPage(1);
+        };
+
+        var currentPage = 1;
+        var totalPage = 0;
+
+        function loadPage(p) {
+            // 这里将会被替换成实际的数据请求
+            // 假设dataRequest函数会返回一个包含totalPage和data的对象
+            dataRequest(p, function(data) {
+                displayData(data);
+                updateTotalPage(data.total);
+            });
+        }
+
+        function displayData(data) {
+            const tbody = document.getElementById('data');
+            tbody.innerHTML = '';
+            for (let i = 0; i < data.length; i++) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${data[i].id}</td>
+                        <td>${data[i].name}</td>
+                        <td><a href="#" onclick="deleteItem(${data[i].id})">删除</a></td>
+                    </tr>
+                `;
+            }
+        }
+
+        function updateTotalPage(total) {
+            const pagination = document.querySelector('.pagination');
+            pagination.innerHTML += `
+                <span>总共有${total}页</span>
+            `;
+        }
+
+        function nextPage() {
+            if (currentPage <= totalPage) {
+                loadPage(currentPage + 1);
+            }
+        }
+
+        function previousPage() {
+            if (currentPage > 1) {
+                loadPage(currentPage - 1);
+            }
+        }
+
+        function deleteItem(id) {
+            // 提交删除请求
+            if (confirm('确定要删除吗？')) {
+                // 假设submitDelete函数会处理删除操作
+                submitDelete(id, function() {
+                    loadPage(1); // 刷新页面，回到第一页
+                });
+            }
+        }
+
+        function submitDelete(id, callback) {
+            // 这里将会被替换成实际的删除请求
+            alert('发送了删除请求');
+            if (callback) {
+                callback();
+            }
+        }
+
+        // 确保当前页数不超过总页数
+        window.onbeforeunload = function() {
+            if (currentPage > totalPage) {
+                currentPage = totalPage;
+            }
+        };
+    </script>
+</body>
+</html>

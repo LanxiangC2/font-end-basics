@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Scroll Example</title>
+    <style>
+        #list-container {
+            width: 300px;
+            height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+        }
+
+        .list-item {
+            height: 30px;
+            line-height: 30px;
+            padding: 0 10px;
+            border-bottom: 1px solid #eee;
+            position: absolute;
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="list-container"></div>
+    <script>
+        class VirtualScroll {
+            constructor(container, data, itemHeight) {
+                this.container = container;
+                this.data = data;
+                this.itemHeight = itemHeight;
+                this.containerHeight = container.offsetHeight;
+                this.startIndex = 0;
+                this.endIndex = Math.min(Math.ceil(this.containerHeight / this.itemHeight), this.data.length);
+
+                // 计算总高度
+                this.totalHeight = this.data.length * this.itemHeight;
+                this.container.style.height = `${this.containerHeight}px`;
+                this.container.style.position = 'relative';
+
+                // 创建占位元素
+                this.placeholder = document.createElement('div');
+                this.placeholder.style.height = `${this.totalHeight}px`;
+                this.container.appendChild(this.placeholder);
+
+                // 创建列表容器
+                this.list = document.createElement('div');
+                this.list.style.position = 'absolute';
+                this.list.style.top = '0';
+                this.list.style.left = '0';
+                this.list.style.width = '100%';
+                this.container.appendChild(this.list);
+
+                // 绑定滚动事件
+                this.container.addEventListener('scroll', this.handleScroll.bind(this));
+
+                // 初始渲染
+                this.renderVisibleItems();
+            }
+
+            handleScroll() {
+                const scrollTop = this.container.scrollTop;
+                const newStartIndex = Math.floor(scrollTop / this.itemHeight);
+                const newEndIndex = Math.min(newStartIndex + Math.ceil(this.containerHeight / this.itemHeight), this.data.length);
+
+                if (newStartIndex!== this.startIndex || newEndIndex!== this.endIndex) {
+                    this.updateVisibleItems(newStartIndex, newEndIndex);
+                    this.startIndex = newStartIndex;
+                    this.endIndex = newEndIndex;
+                }
+            }
+
+            updateVisibleItems(newStartIndex, newEndIndex) {
+                const existingItems = Array.from(this.list.children);
+                const visibleRange = new Set();
+
+                // 移除不在新可见范围内的元素
+                existingItems.forEach((item) => {
+                    const index = parseInt(item.dataset.index);
+                    if (index < newStartIndex || index >= newEndIndex) {
+                        this.list.removeChild(item);
+                    } else {
+                        visibleRange.add(index);
+                    }
+                });
+
+                // 添加新进入可见范围的元素
+                for (let i = newStartIndex; i < newEndIndex; i++) {
+                    if (!visibleRange.has(i)) {
+                        const offset = i * this.itemHeight;
+                        const newItem = document.createElement('div');
+                        newItem.classList.add('list-item');
+                        newItem.dataset.index = i;
+                        newItem.textContent = this.data[i];
+                        newItem.style.top = `${offset}px`;
+                        this.list.appendChild(newItem);
+                        console.log('渲染了' + i)
+                    }
+                }
+            }
+
+            renderVisibleItems() {
+                for (let i = this.startIndex; i < this.endIndex; i++) {
+                    const offset = i * this.itemHeight;
+                    const item = document.createElement('div');
+                    item.classList.add('list-item');
+                    item.dataset.index = i;
+                    item.textContent = this.data[i];
+                    item.style.top = `${offset}px`;
+                    this.list.appendChild(item);
+                    console.log('渲染了' + i)
+                }
+            }
+        }
+
+        // 使用示例
+        const container = document.getElementById('list-container');
+        const data = Array.from({ length: 1000 }, (_, i) => `Item ${i + 1}`);
+        const itemHeight = 30;
+
+        const virtualScroll = new VirtualScroll(container, data, itemHeight);
+    </script>
+</body>
+
+</html>

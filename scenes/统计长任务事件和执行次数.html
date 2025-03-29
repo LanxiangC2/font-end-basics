@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Observer for Long Tasks</title>
+</head>
+
+<body>
+    <h1>Performance Observer for Long Tasks</h1>
+    <button id="startTasks">Start Long Tasks</button>
+    <div id="result"></div>
+
+    <script>
+        // 初始化长任务次数和总耗时
+        let longTaskCount = 0;
+        let totalLongTaskDuration = 0;
+
+        // 创建 PerformanceObserver 实例来监听长任务
+        const observer = new PerformanceObserver((list) => {
+            const entries = list.getEntries(); // *** 
+            for (const entry of entries) {
+                if (entry.entryType === 'longtask') {
+                    longTaskCount++;
+                    totalLongTaskDuration += entry.duration;
+                }
+            }
+            // 更新页面上的统计信息
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `Long tasks count: ${longTaskCount}, Total duration: ${totalLongTaskDuration.toFixed(2)} ms`;
+        });
+
+        // 开始观察长任务
+        observer.observe({ entryTypes: ['longtask'] });
+
+        // 模拟长任务的函数
+        function simulateLongTask() {
+            const startTime = performance.now();
+            // 模拟一个耗时的操作
+            for (let i = 0; i < 1000000000; i++) {
+                // 空循环来消耗时间
+            }
+            const endTime = performance.now();
+            console.log(`Long task duration: ${endTime - startTime} ms`);
+        }
+
+        // 为按钮添加点击事件监听器
+        const startTasksButton = document.getElementById('startTasks');
+        startTasksButton.addEventListener('click', async () => {
+            // 模拟多个长任务
+            for (let i = 0; i < 3; i++) {
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                simulateLongTask();
+            }
+        });
+    </script>
+</body>
+
+</html>

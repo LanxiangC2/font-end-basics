@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="test-btn">测试按钮</button>
+    <div id="content-text"></div>
+
+    <script>
+
+        const btn = document.getElementById('test-btn');
+
+        const content = document.getElementById('content-text')
+
+        btn.addEventListener('click', () => {
+
+            console.log('我被点击了');
+            fetchData();
+
+        })
+
+
+        
+        // 请求数据
+        const fetchData = () => { 
+
+            fetch('http://localhost:3000/api/v1', {
+                // include credentials in the request， 必须要在后端指定域名才行，否则会报错
+                credentials: 'include'
+
+
+            })
+                .then(res => res.json())
+                .then(data => {
+
+                    content.innerHTML = `我从接口拿到的数据：${data.message}`;
+                })
+                .catch(err => console.error(err));
+
+        }
+
+        // 超时请求
+    </script>
+</body>
+</html>
